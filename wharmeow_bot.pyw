@@ -216,5 +216,5 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
 
 
 load_dotenv()
-TOKEN = os.getenv("bot_token.env")
+TOKEN = os.getenv("BOT_TOKEN")
 bot.run(TOKEN)
