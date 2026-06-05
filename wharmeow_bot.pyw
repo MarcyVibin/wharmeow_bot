@@ -1,12 +1,22 @@
 import sys
 import subprocess
 import os
+import logging
 
 REQUIREMENTS = {
   "deep-translator": "deep_translator",
   "discord.py": "discord",
-  "python-dotenv": "dotenv"
+  "python-dotenv": "dotenv",
+  "pillow": "pillow"
 }
+
+log_file = Path(sys.argv[0]).resolve().parent / "bot.log"
+logging.basicConfig(
+  filename=log_file,                                       # log file path
+  level=logging.INFO,                                      # minimum level to capture
+  filemode="a",                                            # append to existing log
+  format="%(asctime)s [%(levelname)s] %(message)s"
+)
 
 def ensure_dependencies():
   for pip_name, import_name in REQUIREMENTS.items():
@@ -19,25 +29,20 @@ def ensure_dependencies():
       ])
 ensure_dependencies()
 
-from pathlib import Path
-import logging
-from deep_translator import GoogleTranslator
-from PIL import Image
-from io import BytesIO
-import constants
-from dotenv import load_dotenv
-import discord
-from discord import app_commands
-from discord.ext import commands
+try:
+  from pathlib import Path
+  from deep_translator import GoogleTranslator
+  from PIL import Image
+  from io import BytesIO
+  import constants
+  from dotenv import load_dotenv
+  import discord
+  from discord import app_commands
+  from discord.ext import commands
+except:
+  print("Error when importing packages.")
 
 
-log_file = Path(sys.argv[0]).resolve().parent / "bot.log"
-logging.basicConfig(
-  filename=log_file,                                       # log file path
-  level=logging.INFO,                                      # minimum level to capture
-  filemode="a",                                            # append to existing log
-  format="%(asctime)s [%(levelname)s] %(message)s"
-)
 
 
 intents = discord.Intents.default()
