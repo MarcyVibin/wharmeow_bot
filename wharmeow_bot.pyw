@@ -186,8 +186,9 @@ async def on_ready():
   logging.info("Global commands synced (may take up to an hour to propagate)")
 
   discord.Activity(type=discord.ActivityType.playing, name="/help")
-
   logging.info(f"Logged in as {bot.user}")
+
+  logging.info(f"Connected to guilds: {', '.join(guild.name for guild in bot.guilds)}")
 
 @bot.event
 async def on_member_join(member: discord.Member):
