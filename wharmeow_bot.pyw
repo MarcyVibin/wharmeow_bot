@@ -71,7 +71,7 @@ def convertToGif(image: Image.Image, duration: int = 100, loop: int = 0) -> Byte
   buffer.seek(0)
   return buffer
 
-async def add_role(member: discord.Member):
+async def addStartRoles(member: discord.Member):
   for role_id in constants.NEWCOMER_ROLES:
     role = member.guild.get_role(role_id)
     if role:
@@ -192,7 +192,7 @@ async def on_ready():
 @bot.event
 async def on_member_join(member: discord.Member):
   if member.guild.id in constants.MANAGED_GUILDS:
-    await add_role(member)
+    await addStartRoles(member)
     logging.info(f"New member {member.name}#{member.discriminator} (ID: {member.id}) joined guild {member.guild.name} (ID: {member.guild.id}). Assigning newcomer roles.")
 
 @bot.event
@@ -222,7 +222,11 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
 
   role = guild.get_role(role_id)
   if role:
-    await member.add_roles(role)
+    if role in member.roles:
+      await member.remove_roles(role)
+    else:
+      await member.add_roles(role)
+      
 
 
 load_dotenv()
