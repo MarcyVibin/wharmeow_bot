@@ -1,6 +1,7 @@
 import sys
 import subprocess
 import os
+from pathlib import Path
 import logging
 
 REQUIREMENTS = {
@@ -30,7 +31,6 @@ def ensure_dependencies():
 ensure_dependencies()
 
 try:
-  from pathlib import Path
   from deep_translator import GoogleTranslator
   from PIL import Image
   from io import BytesIO
