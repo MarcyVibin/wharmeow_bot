@@ -121,7 +121,7 @@ async def translate(ctx: commands.Context):
     ).translate(original_text)
 
     if translated == original_text:
-      raise Exception
+      raise Exception("Did not recognize language / already english")
 
     await ctx.send(f"**Translation:**\n{translated}")
     logging.info(f"Translated \"{original_text}\" -> \"{translated}\": {getUserInfo(ctx)}")
