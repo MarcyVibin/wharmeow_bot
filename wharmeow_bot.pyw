@@ -39,10 +39,9 @@ try:
   import discord
   from discord import app_commands
   from discord.ext import commands
-except:
+except Exception as e:
   print("Error when importing packages.")
-
-
+  logging.error(f"Error when importing packages. Error Message: {e}")
 
 
 intents = discord.Intents.default()
@@ -81,6 +80,9 @@ async def add_role(member: discord.Member):
     else:
       logging.warning(f"Role ID {role_id} not found in guild {member.guild.name} (ID: {member.guild.id})")
 
+def getUserInfo(context: commands.Context) -> str:
+  return f"{context.author} in Guild {context.guild}."
+
 
 #==========================================
 # Command Functions
@@ -118,12 +120,15 @@ async def translate(ctx: commands.Context):
       target="en"
     ).translate(original_text)
 
-    await ctx.send(
-      f"**Translation:**\n{translated}"
-    )
+    if translated == original_text:
+      raise Exception
+
+    await ctx.send(f"**Translation:**\n{translated}")
+    logging.info(f"Translated \"{original_text}\" -> \"{translated}\": {getUserInfo(ctx)}")
 
   except Exception as e:
     await ctx.send(f"Translation failed: {e}")
+    logging.info(f"Failed translation for user: {getUserInfo(ctx)}")
 
 @bot.command(name="make_gif", help="Turn an attached image into a GIF", aliases=["makegif", "gif"])
 async def make_gif(ctx: commands.Context):
