@@ -3,6 +3,7 @@ import subprocess
 import os
 from pathlib import Path
 import logging
+from datetime import datetime, timedelta, timezone
 
 REQUIREMENTS = {
   "deep-translator": "deep_translator",
@@ -83,6 +84,28 @@ async def addStartRoles(member: discord.Member):
 def getUserInfo(context: commands.Context) -> str:
   return f"{context.author} in Guild {context.guild}."
 
+async def clear_user_messages(guild: discord.Guild, user: discord.Member):
+  deleted = 0
+  cutoff = datetime.now(timezone.utc) - timedelta(days=14)
+
+  for channel in guild.text_channels:
+    perms = channel.permissions_for(guild.me)
+
+    if not perms.read_message_history or not perms.manage_messages:
+      continue
+
+    try:
+      async for message in channel.history(limit=None, after=cutoff):
+        if message.author.id == user.id:
+          try:
+            await message.delete()
+            deleted += 1
+          except (discord.Forbidden, discord.HTTPException):
+            pass
+    except discord.Forbidden:
+      continue
+
+  return deleted
 
 #==========================================
 # Command Functions
@@ -92,11 +115,46 @@ async def hello(interaction: discord.Interaction):
   logging.info(f"Help command used by {interaction.user} in guild {interaction.guild}.")
   await interaction.response.send_message("use !make_gif or !makegif to convert an image into a gif.")
 
-@bot.tree.command(name="clear", description="Clear messages from this channel")
-@commands.has_permissions(administrator=True)
-async def clear(interaction: discord.Interaction, amount: app_commands.Range[int, 1, 100] = 1):
-  await interaction.response.defer(thinking=False)
-  await interaction.channel.purge(limit=amount + 1)
+
+@bot.tree.command(name="clear", description="Clear messages (channel or specific user across server)")
+@app_commands.checks.has_permissions(administrator=True)
+async def clear(
+  interaction: discord.Interaction,
+  amount: app_commands.Range[int, 1, 100] = 1,
+  user: discord.Member = None
+):
+  await interaction.response.defer(ephemeral=True)
+
+  # CASE 1: No user -> normal channel purge
+  if user is None:
+    deleted = await interaction.channel.purge(limit=amount + 1)
+    await interaction.followup.send(f"Deleted {len(deleted)} messages in this channel.")
+    return
+
+  # CASE 2: User specified -> global deletion (last 14 days)
+  cutoff = datetime.now(timezone.utc) - timedelta(days=14)
+  deleted_count = 0
+
+  for channel in interaction.guild.text_channels:
+    perms = channel.permissions_for(interaction.guild.me)
+
+    if not perms.read_message_history or not perms.manage_messages:
+      continue
+
+    try:
+      async for message in channel.history(limit=None, after=cutoff):
+        if message.author.id == user.id:
+          try:
+            await message.delete()
+            deleted_count += 1
+          except (discord.Forbidden, discord.HTTPException):
+            pass
+    except discord.Forbidden:
+      continue
+
+  await interaction.followup.send(
+    f"Deleted {deleted_count} messages from {user.mention} (last 14 days)."
+  )
 
 @bot.command(name="translate", help="Translate the replied message to English.")
 async def translate(ctx: commands.Context):
